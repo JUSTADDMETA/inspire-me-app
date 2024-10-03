@@ -17,6 +17,7 @@
     "autoprefixer": "10.4.17",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "framer-motion": "^11.10.0",
     "geist": "^1.2.1",
     "lucide-react": "^0.436.0",
     "next": "latest",
@@ -25,6 +26,9 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-dropzone": "^14.2.9",
+    "react-router-dom": "^6.26.2",
+    "swiper": "^11.1.14",
+    "three": "^0.169.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
