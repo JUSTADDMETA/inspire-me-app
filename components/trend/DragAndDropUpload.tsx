@@ -11,11 +11,19 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+type Video = {
+  file_name: string;
+  title: string;
+  description: string;
+  categories: string[];
+  videoUrl: string;
+};
+
 export default function DragAndDropUpload() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categories, setCategories] = useState('');
-  const [videos, setVideos] = useState([]);
+  const [videos, setVideos] = useState<Video[]>([]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const s3Client = new S3Client({
@@ -55,7 +63,6 @@ export default function DragAndDropUpload() {
         if (error) {
           console.error('Fehler beim Speichern der Metadaten:', error);
         } else {
-          // Füge das neue Video direkt zur Liste hinzu
           setVideos(prevVideos => [
             ...prevVideos,
             {
@@ -85,7 +92,7 @@ export default function DragAndDropUpload() {
     if (error) {
       console.error('Fehler beim Abrufen der Videos:', error);
     } else {
-      const parsedData = data.map(video => ({
+      const parsedData = data.map((video: any) => ({
         ...video,
         categories: JSON.parse(video.categories),
         videoUrl: `https://ddbyrpmrexntgqszrays.supabase.co/storage/v1/object/public/videos/${video.file_name}`
