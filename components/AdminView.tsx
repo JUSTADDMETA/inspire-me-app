@@ -59,19 +59,6 @@ export default function AdminView() {
     }
   };
 
-  const handleEdit = async (id: number, newTitle: string, newDescription: string) => {
-    const { error } = await supabase
-      .from('videos')
-      .update({ title: newTitle, description: newDescription })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Fehler beim Bearbeiten des Videos:', error);
-    } else {
-      setVideos(videos.map(video => video.id === id ? { ...video, title: newTitle, description: newDescription } : video));
-    }
-  };
-
   const confirmDelete = (video: Video) => {
     setVideoToDelete(video);
     setShowConfirm(true);
@@ -99,17 +86,8 @@ export default function AdminView() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {filteredVideos.map((video) => (
           <div key={video.id} className="card p-4 border border-gray-300 rounded-lg shadow-md">
-            <input
-              type="text"
-              value={video.title}
-              onChange={(e) => handleEdit(video.id, e.target.value, video.description)}
-              className="w-full p-1 mb-2 border rounded"
-            />
-            <textarea
-              value={video.description}
-              onChange={(e) => handleEdit(video.id, video.title, e.target.value)}
-              className="w-full p-1 mb-2 border rounded"
-            />
+            <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
+            <p className="mb-2">{video.description}</p>
             <p>Kategorien: {video.categories.join(', ')}</p>
             <video src={video.videoUrl} controls className="mt-2 w-full h-auto" style={{ aspectRatio: '9/16' }} />
             <button onClick={() => confirmDelete(video)} className="mt-2 p-2 bg-red-500 text-white rounded">
