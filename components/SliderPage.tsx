@@ -49,7 +49,7 @@ export default function VideoPage() {
     const { data, error } = await supabase
       .from('videos')
       .select('*');
-
+  
     if (error) {
       console.error('Fehler beim Abrufen der Videos:', error);
     } else {
@@ -61,10 +61,10 @@ export default function VideoPage() {
       }));
       setVideos(parsedData);
       setFilteredVideos(parsedData);
-
+  
       const uniqueCategories = new Set<string>();
       parsedData.forEach((video) => {
-        video.categories.forEach((category) => uniqueCategories.add(category));
+        video.categories.forEach((category: string) => uniqueCategories.add(category));
       });
       setAllCategories(Array.from(uniqueCategories));
     }
