@@ -30,7 +30,6 @@ export default async function ProtectedPage() {
         <UploadPage />
         <AdminView />
         <UserManagement />
-        <VideoCompression />
       </div>
     </div>
   );
