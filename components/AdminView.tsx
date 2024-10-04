@@ -15,6 +15,7 @@ type Video = {
   description: string;
   categories: string[];
   videoUrl: string;
+  external_link: string; // Neuer Eintrag für den externen Link
 };
 
 export default function AdminView() {
@@ -89,6 +90,7 @@ export default function AdminView() {
             <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
             <p className="mb-2">{video.description}</p>
             <p>Kategorien: {video.categories.join(', ')}</p>
+            <p>Externer Link: <a href={video.external_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{video.external_link}</a></p>
             <video src={video.videoUrl} controls className="mt-2 w-full h-auto" style={{ aspectRatio: '9/16' }} />
             <button onClick={() => confirmDelete(video)} className="mt-2 p-2 bg-red-500 text-white rounded">
               Löschen
