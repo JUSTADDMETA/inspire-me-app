@@ -1,3 +1,4 @@
+import React, { Suspense } from 'react';
 import DeployButton from "@/components/deploy-button";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
@@ -15,6 +16,10 @@ export const metadata = {
   description: "The fastest way to build apps with Next.js and Supabase",
 };
 
+// Memoize components to prevent unnecessary re-renders
+const MemoizedNav = React.memo(Nav);
+const MemoizedFooter = React.memo(Footer);
+
 export default function RootLayout({
   children,
 }: {
@@ -31,11 +36,13 @@ export default function RootLayout({
         >
           <main className="min-h-screen flex flex-col items-center">
             <div className="flex-1 w-full flex flex-col items-center">
-              <Nav />
-              <div className="flex flex-col w-full pt-24 lg:pt-32 p-4 -mt-16">
-                {children}
-              </div>
-              <Footer />
+              <Suspense fallback={<div>Loading...</div>}>
+                <MemoizedNav />
+                <div className="flex flex-col w-full pt-24 md:pt-0 -mt-16">
+                  {children}
+                </div>
+                <MemoizedFooter />
+              </Suspense>
             </div>
           </main>
         </ThemeProvider>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { FaHeart, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
+import { FaHeart, FaVolumeMute, FaVolumeUp, FaRedo } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const supabase = createClient(
@@ -22,19 +22,19 @@ type Video = {
 };
 
 const styles = {
-  container: "flex flex-col w-full h-full text-white h-fit lg:h-screen",
-  gridContainer: "grid w-full justify-center gap-4 grid-cols-1 md:grid-cols-2  lg:grid-cols-3",
-  leftColumn: "flex content-start flex-wrap gap-2 flex flex-row gap-2 md:col-span-2 lg:col-span-1 p-4",
+  container: "flex flex-col w-full h-full text-white",
+  gridContainer: "grid w-full justify-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+  leftColumn: "flex content-start flex-wrap gap-2 flex flex-row gap-2 md:col-span-2 lg:col-span-1 p-0 lg:p-4 h-full",
   middleColumn: "relative",
   rightColumn: "p-0 lg:p-4 flex flex-col text-white",
-  categoryButton: "w-fit py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-  activeCategoryButton: "bg-[#a8d603]",
+  categoryButton: "w-fit py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
+  activeCategoryButton: "bg-gray-200 text-gray-800",
   video: "w-full h-full object-fill",
   spinner: "spinner border-t-4 border-b-4 border-gray-900 rounded-full w-12 h-12 animate-spin",
   muteButton: "absolute bottom-4 right-4 text-white z-30",
-  externalLink: "w-full md:w-fit py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  externalLink: "w-full md:w-fit py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   nextButtonContainer: "w-full flex justify-center md:col-span-2 lg:col-span-3",
-  nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   notification: "fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg z-50",
 };
 
@@ -90,6 +90,12 @@ export default function VideoPage() {
     }
   };
 
+  const resetFilter = () => {
+    setFilteredVideos(videos);
+    setActiveCategory(null);
+    setCurrentVideoIndex(0);
+  };
+
   const handleNextVideo = () => {
     if (filteredVideos.length === 0) {
       return;
@@ -128,21 +134,17 @@ export default function VideoPage() {
       </AnimatePresence>
 
       {!showCard ? (
-        <div className="flex flex-col w-full items-center justify-center text-white h-screen">
-          <button onClick={handleInspireMe} className="bg-[#defd3e] text-black py-2 px-6 rounded-3xl mb-44 md:mb-60 lg:mb-72">
+        <div className="flex flex-col w-full items-center justify-center text-white h-full">
+          <button onClick={handleInspireMe} className="bg-[#defd3e] text-black py-2 px-6 rounded">
             Inspire Me
           </button>
         </div>
       ) : (
-        <div
-          className={styles.gridContainer}
-        >
-          <motion.div
-            key={`left-${currentVideoIndex}`}
+        <div className={styles.gridContainer}>
+          <div
+             key={`left-${currentVideoIndex}`}
             className={styles.leftColumn}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+
           >
             {allCategories.map((category) => (
               <button
@@ -153,7 +155,7 @@ export default function VideoPage() {
                 {category}
               </button>
             ))}
-          </motion.div>
+          </div>
 
           <motion.div
             key={`middle-${currentVideoIndex}`}
@@ -204,15 +206,23 @@ export default function VideoPage() {
             )}
           </motion.div>
 
-          
-          <button
-    onClick={handleNextVideo}
-    className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 fixed bottom-4 right-4"
->
-    <span className="hidden md:block">🔄 Spin again</span> {/* Text für Desktop */}
-    <span className="block md:hidden">🔄</span> {/* Icon für Mobile */}
-</button>
-
+          <div className="fixed bottom-4 right-4 flex gap-2">
+            {activeCategory && (
+              <button
+                onClick={resetFilter}
+                className="bg-[#defd3e] text-black w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <FaRedo />
+              </button>
+            )}
+            <button
+              onClick={handleNextVideo}
+              className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200"
+            >
+              <span className="hidden md:block">🔄 Spin again</span>
+              <span className="block md:hidden">🔄</span>
+            </button>
+          </div>
         </div>
       )}
     </div>
