@@ -54,13 +54,14 @@ type VideoPlayerProps = {
   toggleMute: () => void;
 };
 
-const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerProps) => (
+const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }) => (
   <div className="rounded-lg" style={{ position: 'relative' }}>
     <motion.video
       src={videoUrl}
       autoPlay
       loop
       muted={isMuted}
+      playsInline // Fügt hinzu, um Vollbildverhalten zu verhindern
       style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }}
       className="rounded-lg"
       initial={{ opacity: 0 }}
