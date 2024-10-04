@@ -24,7 +24,7 @@ type Video = {
 const styles = {
   container: "flex flex-col w-full h-full text-white h-fit lg:h-screen",
   gridContainer: "grid w-full justify-center gap-4 grid-cols-1 md:grid-cols-2  lg:grid-cols-3",
-  leftColumn: "flex  content-start flex-wrap gap-2 flex flex-row gap-2 md:col-span-2 lg:col-span-1",
+  leftColumn: "flex content-start flex-wrap gap-2 flex flex-row gap-2 md:col-span-2 lg:col-span-1 p-4",
   middleColumn: "relative",
   rightColumn: "p-0 lg:p-4 flex flex-col text-white",
   categoryButton: "w-fit py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
@@ -32,10 +32,10 @@ const styles = {
   video: "w-full h-full object-fill",
   spinner: "spinner border-t-4 border-b-4 border-gray-900 rounded-full w-12 h-12 animate-spin",
   muteButton: "absolute bottom-4 right-4 text-white z-30",
-  externalLink: "w-full md:w-fit py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  externalLink: "w-full md:w-fit py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   nextButtonContainer: "w-full flex justify-center md:col-span-2 lg:col-span-3",
-  nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-  notification: "fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg",
+  nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  notification: "fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg z-50",
 };
 
 export default function VideoPage() {
@@ -102,31 +102,6 @@ export default function VideoPage() {
     }
   };
 
-  const handleLike = async () => {
-    const video = filteredVideos[currentVideoIndex];
-    const likedVideos = JSON.parse(localStorage.getItem('likedVideos') || '[]');
-
-    if (!likedVideos.includes(video.id)) {
-      const newLikes = video.likes + 1;
-
-      const { error } = await supabase
-        .from('videos')
-        .update({ likes: newLikes })
-        .eq('id', video.id);
-
-      if (!error) {
-        const updatedVideos = [...filteredVideos];
-        updatedVideos[currentVideoIndex].likes = newLikes;
-        setFilteredVideos(updatedVideos);
-
-        likedVideos.push(video.id);
-        localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
-      }
-    } else {
-      console.log("Already liked");
-    }
-  };
-
   const toggleMute = () => {
     setIsMuted(!isMuted);
   };
@@ -187,7 +162,7 @@ export default function VideoPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <div style={{ position: 'relative' }}>
+            <div className="rounded-lg" style={{ position: 'relative' }}>
               {isLoading ? (
                 <div className={styles.spinner}></div>
               ) : (
@@ -198,6 +173,7 @@ export default function VideoPage() {
                   loop
                   muted={isMuted}
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  className="rounded-lg" 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -220,7 +196,7 @@ export default function VideoPage() {
             {filteredVideos.length > 0 && (
               <>
                 <strong className="text-2xl">{filteredVideos[currentVideoIndex].title}</strong>
-                <p className="text-md my-4">{filteredVideos[currentVideoIndex].description}</p>
+                <p className="text-md mt-4 mb-6">{filteredVideos[currentVideoIndex].description}</p>
                 <a href={filteredVideos[currentVideoIndex].external_link} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
                   Zum Externen Link
                 </a>
@@ -231,9 +207,9 @@ export default function VideoPage() {
           
           <button
     onClick={handleNextVideo}
-    className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded-3xl flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 fixed bottom-4 right-4"
+    className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 fixed bottom-4 right-4"
 >
-    <span className="hidden md:block">Spin again</span> {/* Text für Desktop */}
+    <span className="hidden md:block">🔄 Spin again</span> {/* Text für Desktop */}
     <span className="block md:hidden">🔄</span> {/* Icon für Mobile */}
 </button>
 
