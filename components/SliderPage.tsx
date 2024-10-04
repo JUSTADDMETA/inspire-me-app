@@ -48,15 +48,15 @@ const CategoryButton = React.memo(({ category, isActive, onClick }: { category: 
   </button>
 ));
 
-const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: { videoUrl: string, isMuted: boolean, toggleMute: () => void }) => (
+const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }) => (
   <div className="rounded-lg" style={{ position: 'relative' }}>
     <motion.video
       src={videoUrl}
       autoPlay
       loop
       muted={isMuted}
-      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-      className="rounded-lg" 
+      style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }}
+      className="rounded-lg"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
