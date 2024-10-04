@@ -6,7 +6,7 @@ const MemoizedSliderPage = React.memo(SliderPage);
 
 export default async function Index() {
   return (
-    <div className="flex justify-center items-center h-fit md:h-screen">
+    <div className="flex justify-center items-center h-fit pt-32 pb-64">
       <div className="w-full max-w-xs md:max-w-2xl lg:max-w-5xl overflow-hidden">
         <Suspense fallback={<div>Loading Slider...</div>}>
           <MemoizedSliderPage />

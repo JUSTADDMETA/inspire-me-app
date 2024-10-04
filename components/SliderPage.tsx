@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { FaHeart, FaVolumeMute, FaVolumeUp, FaRedo } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,6 +37,36 @@ const styles = {
   nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   notification: "fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg z-50",
 };
+
+// Memoized components
+const CategoryButton = React.memo(({ category, isActive, onClick }: { category: string, isActive: boolean, onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className={`${styles.categoryButton} ${isActive ? styles.activeCategoryButton : ''}`}
+  >
+    {category}
+  </button>
+));
+
+const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: { videoUrl: string, isMuted: boolean, toggleMute: () => void }) => (
+  <div className="rounded-lg" style={{ position: 'relative' }}>
+    <motion.video
+      src={videoUrl}
+      autoPlay
+      loop
+      muted={isMuted}
+      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+      className="rounded-lg" 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    />
+    <button onClick={toggleMute} style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 2 }}>
+      {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+    </button>
+  </div>
+));
 
 export default function VideoPage() {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -78,7 +108,7 @@ export default function VideoPage() {
     setIsLoading(false);
   };
 
-  const filterVideosByCategory = (category: string) => {
+  const filterVideosByCategory = useCallback((category: string) => {
     if (activeCategory === category) {
       setFilteredVideos(videos);
       setActiveCategory(null);
@@ -88,15 +118,15 @@ export default function VideoPage() {
       setActiveCategory(category);
       setCurrentVideoIndex(0);
     }
-  };
+  }, [activeCategory, videos]);
 
-  const resetFilter = () => {
+  const resetFilter = useCallback(() => {
     setFilteredVideos(videos);
     setActiveCategory(null);
     setCurrentVideoIndex(0);
-  };
+  }, [videos]);
 
-  const handleNextVideo = () => {
+  const handleNextVideo = useCallback(() => {
     if (filteredVideos.length === 0) {
       return;
     }
@@ -106,16 +136,16 @@ export default function VideoPage() {
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
     }
-  };
+  }, [currentVideoIndex, filteredVideos.length, showNotification]);
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     setIsMuted(!isMuted);
-  };
+  }, [isMuted]);
 
-  const handleInspireMe = () => {
+  const handleInspireMe = useCallback(() => {
     setCurrentVideoIndex(Math.floor(Math.random() * filteredVideos.length));
     setShowCard(true);
-  };
+  }, [filteredVideos.length]);
 
   return (
     <div className={styles.container}>
@@ -134,26 +164,21 @@ export default function VideoPage() {
       </AnimatePresence>
 
       {!showCard ? (
-        <div className="flex flex-col w-full items-center justify-center text-white h-full">
-          <button onClick={handleInspireMe} className="bg-[#defd3e] text-black py-2 px-6 rounded">
+        <div className="flex flex-col w-full items-center justify-center text-white h-96">
+          <button onClick={handleInspireMe} className="bg-[#defd3e] text-black py-2 px-6 rounded mt-32">
             Inspire Me
           </button>
         </div>
       ) : (
         <div className={styles.gridContainer}>
-          <div
-             key={`left-${currentVideoIndex}`}
-            className={styles.leftColumn}
-
-          >
+          <div className={styles.leftColumn}>
             {allCategories.map((category) => (
-              <button
+              <CategoryButton
                 key={category}
+                category={category}
+                isActive={activeCategory === category}
                 onClick={() => filterVideosByCategory(category)}
-                className={`${styles.categoryButton} ${activeCategory === category ? styles.activeCategoryButton : ''}`}
-              >
-                {category}
-              </button>
+              />
             ))}
           </div>
 
@@ -164,28 +189,15 @@ export default function VideoPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <div className="rounded-lg" style={{ position: 'relative' }}>
-              {isLoading ? (
-                <div className={styles.spinner}></div>
-              ) : (
-                <motion.video
-                  key={filteredVideos[currentVideoIndex].id}
-                  src={filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].videoUrl : ''}
-                  autoPlay
-                  loop
-                  muted={isMuted}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  className="rounded-lg" 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                />
-              )}
-              <button onClick={toggleMute} style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 2 }}>
-                {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-              </button>
-            </div>
+            {isLoading ? (
+              <div className={styles.spinner}></div>
+            ) : (
+              <VideoPlayer
+                videoUrl={filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].videoUrl : ''}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+              />
+            )}
           </motion.div>
 
           <motion.div
