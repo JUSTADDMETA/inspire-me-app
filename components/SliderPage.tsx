@@ -54,26 +54,36 @@ type VideoPlayerProps = {
   toggleMute: () => void;
 };
 
-const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerProps) => (
-  <div className="rounded-lg" style={{ position: 'relative' }}>
-    <motion.video
-      src={videoUrl}
-      autoPlay
-      loop
-      muted={isMuted}
-      playsInline
-      style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }}
-      className="rounded-lg"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    />
-    <button onClick={toggleMute} style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 2 }}>
-      {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-    </button>
-  </div>
-));
+const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerProps) => {
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
+  return (
+    <div className="rounded-lg" style={{ position: 'relative', width: '100%', height: '100%', aspectRatio: '9/16' }}>
+      {!isVideoLoaded && (
+        <div className="flex items-center justify-center w-full h-full bg-gray-800">
+          <div className={styles.spinner}></div>
+        </div>
+      )}
+      <motion.video
+        src={videoUrl}
+        autoPlay
+        loop
+        muted={isMuted}
+        playsInline
+        onLoadedData={() => setIsVideoLoaded(true)}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', display: isVideoLoaded ? 'block' : 'none' }}
+        className="rounded-lg"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+      />
+      <button onClick={toggleMute} style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 2 }}>
+        {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+      </button>
+    </div>
+  );
+});
 
 export default function VideoPage() {
   const [videos, setVideos] = useState<Video[]>([]);
