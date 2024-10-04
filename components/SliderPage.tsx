@@ -147,6 +147,21 @@ export default function VideoPage() {
     setShowCard(true);
   }, [filteredVideos.length]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    };
+  
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+  
+    // Cleanup function to remove the event listener
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   return (
     <div className={styles.container}>
       <AnimatePresence>
