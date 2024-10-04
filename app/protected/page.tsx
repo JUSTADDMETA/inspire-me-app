@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import UploadPage from "@/components/UploadPage";
 import AdminView from "@/components/AdminView";
 import UserManagement from "@/components/UserManagement";
-import VideoCompression from "@/components/VideoCompression";
 
 const styles = {
   container: "flex-1 w-full flex flex-col gap-12",
