@@ -15,7 +15,7 @@ type Video = {
   description: string;
   categories: string[];
   videoUrl: string;
-  external_link: string; // Neuer Eintrag für den externen Link
+  external_link: string;
 };
 
 export default function AdminView() {
@@ -46,17 +46,32 @@ export default function AdminView() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    const { error } = await supabase
-      .from('videos')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Fehler beim Löschen des Videos:', error);
-    } else {
+  const handleDelete = async (id: number, fileName: string) => {
+    try {
+      // Lösche das Video aus dem Bucket
+      const { error: deleteError } = await supabase
+        .storage
+        .from('videos') // Stelle sicher, dass dies der korrekte Bucket-Name ist
+        .remove([fileName]); // Datei mit vollständigem Pfad, falls nötig
+  
+      if (deleteError) {
+        throw new Error('Fehler beim Löschen des Videos im Bucket: ' + deleteError.message);
+      }
+  
+      // Lösche den Datenbankeintrag
+      const { error: dbError } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', id);
+  
+      if (dbError) {
+        throw new Error('Fehler beim Löschen des Datenbankeintrags: ' + dbError.message);
+      }
+  
       setVideos(videos.filter(video => video.id !== id));
       setShowConfirm(false);
+    } catch (error) {
+      console.error(error.message);
     }
   };
 
@@ -105,7 +120,7 @@ export default function AdminView() {
             <p>Möchten Sie das Video "{videoToDelete.title}" wirklich löschen?</p>
             <div className="flex justify-end gap-2 mt-4">
               <button onClick={() => setShowConfirm(false)} className="p-2 bg-gray-300 rounded">Nein</button>
-              <button onClick={() => handleDelete(videoToDelete.id)} className="p-2 bg-red-500 text-white rounded">Ja</button>
+              <button onClick={() => handleDelete(videoToDelete.id, videoToDelete.file_name)} className="p-2 bg-red-500 text-white rounded">Ja</button>
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import UploadPage from "@/components/UploadPage";
 import AdminView from "@/components/AdminView";
 import UserManagement from "@/components/UserManagement";
 
+
 const styles = {
   container: "flex-1 w-full flex flex-col gap-12",
   infoBox: "bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center",

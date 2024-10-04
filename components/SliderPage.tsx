@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { FaHeart, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,17 +22,20 @@ type Video = {
 };
 
 const styles = {
-  container: "flex flex-row w-full h-full text-white",
-  leftColumn: "w-1/4 p-4 flex flex-col",
-  categoryButton: "bg-white text-black px-2 py-1 mb-2 rounded",
-  middleColumn: "w-1/2 relative",
-  video: "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full max-h-full max-w-full object-cover rounded-xl border border-gray-200 overflow-hidden",
+  container: "flex flex-col w-full h-full text-white h-fit lg:h-screen",
+  gridContainer: "grid w-full justify-center gap-4 grid-cols-1 md:grid-cols-2  lg:grid-cols-3",
+  leftColumn: "flex  content-start flex-wrap gap-2 flex flex-row gap-2 md:col-span-2 lg:col-span-1",
+  middleColumn: "relative",
+  rightColumn: "p-0 lg:p-4 flex flex-col text-white",
+  categoryButton: "w-fit py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  activeCategoryButton: "bg-[#a8d603]",
+  video: "w-full h-full object-fill",
   spinner: "spinner border-t-4 border-b-4 border-gray-900 rounded-full w-12 h-12 animate-spin",
-  likeButton: "absolute top-4 right-4 text-white z-30",
-  rightColumn: "w-1/4 p-4 flex flex-col text-white",
-  externalLink: "mt-4 p-2 bg-blue-500 text-white rounded text-center block",
-  nextButtonContainer: "absolute bottom-4 w-full flex justify-center",
-  nextButton: "p-4 bg-black text-white rounded",
+  muteButton: "absolute bottom-4 right-4 text-white z-30",
+  externalLink: "w-full md:w-fit py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  nextButtonContainer: "w-full flex justify-center md:col-span-2 lg:col-span-3",
+  nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  notification: "fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg",
 };
 
 export default function VideoPage() {
@@ -39,6 +44,10 @@ export default function VideoPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [allCategories, setAllCategories] = useState<string[]>([]);
   const [filteredVideos, setFilteredVideos] = useState<Video[]>([]);
+  const [isMuted, setIsMuted] = useState(true);
+  const [showCard, setShowCard] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
     fetchVideos();
@@ -46,9 +55,7 @@ export default function VideoPage() {
 
   const fetchVideos = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*');
+    const { data, error } = await supabase.from('videos').select('*');
   
     if (error) {
       console.error('Fehler beim Abrufen der Videos:', error);
@@ -72,13 +79,27 @@ export default function VideoPage() {
   };
 
   const filterVideosByCategory = (category: string) => {
-    const filtered = videos.filter(video => video.categories.includes(category));
-    setFilteredVideos(filtered);
-    setCurrentVideoIndex(0);
+    if (activeCategory === category) {
+      setFilteredVideos(videos);
+      setActiveCategory(null);
+    } else {
+      const filtered = videos.filter(video => video.categories.includes(category));
+      setFilteredVideos(filtered);
+      setActiveCategory(category);
+      setCurrentVideoIndex(0);
+    }
   };
 
   const handleNextVideo = () => {
-    setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % filteredVideos.length);
+    if (filteredVideos.length === 0) {
+      return;
+    }
+    const nextIndex = (currentVideoIndex + 1) % filteredVideos.length;
+    setCurrentVideoIndex(nextIndex);
+    if (nextIndex === 0 && !showNotification) {
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+    }
   };
 
   const handleLike = async () => {
@@ -106,65 +127,118 @@ export default function VideoPage() {
     }
   };
 
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
+
+  const handleInspireMe = () => {
+    setCurrentVideoIndex(Math.floor(Math.random() * filteredVideos.length));
+    setShowCard(true);
+  };
+
   return (
     <div className={styles.container}>
-      {/* Linke Spalte: Filter */}
-      <div className={styles.leftColumn}>
-        {allCategories.map((category) => (
-          <button
-            key={category}
-            onClick={() => filterVideosByCategory(category)}
-            className={styles.categoryButton}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            className={styles.notification}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ duration: 0.5 }}
           >
-            {category}
+            Alle Videos angesehen.
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {!showCard ? (
+        <div className="flex flex-col w-full items-center justify-center text-white h-screen">
+          <button onClick={handleInspireMe} className="bg-[#defd3e] text-black py-2 px-6 rounded-3xl mb-44 md:mb-60 lg:mb-72">
+            Inspire Me
           </button>
-        ))}
-      </div>
-
-      {/* Mittlere Spalte: Video */}
-      <div className={styles.middleColumn} style={{ height: '100vh' }}>
-        {isLoading ? (
-          <div className={styles.spinner}></div>
-        ) : (
-          <video
-            src={filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].videoUrl : ''}
-            autoPlay
-            loop
-            muted
-            className={styles.video}
-            style={{ aspectRatio: '9 / 16' }}
-          />
-        )}
-        <button
-          onClick={handleLike}
-          className={styles.likeButton}
+        </div>
+      ) : (
+        <div
+          className={styles.gridContainer}
         >
-          ❤️ {filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].likes : 0}
-        </button>
-      </div>
+          <motion.div
+            key={`left-${currentVideoIndex}`}
+            className={styles.leftColumn}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            {allCategories.map((category) => (
+              <button
+                key={category}
+                onClick={() => filterVideosByCategory(category)}
+                className={`${styles.categoryButton} ${activeCategory === category ? styles.activeCategoryButton : ''}`}
+              >
+                {category}
+              </button>
+            ))}
+          </motion.div>
 
-      {/* Rechte Spalte: Titel, Beschreibung, Externer Link */}
-      <div className={styles.rightColumn}>
-        {filteredVideos.length > 0 && (
-          <>
-            <strong className="text-2xl">{filteredVideos[currentVideoIndex].title}</strong>
-            <p className="text-md my-4">{filteredVideos[currentVideoIndex].description}</p>
-            <a href={filteredVideos[currentVideoIndex].external_link} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
-              Zum Externen Link
-            </a>
-          </>
-        )}
-      </div>
+          <motion.div
+            key={`middle-${currentVideoIndex}`}
+            className={styles.middleColumn}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div style={{ position: 'relative' }}>
+              {isLoading ? (
+                <div className={styles.spinner}></div>
+              ) : (
+                <motion.video
+                  key={filteredVideos[currentVideoIndex].id}
+                  src={filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].videoUrl : ''}
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                />
+              )}
+              <button onClick={toggleMute} style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 2 }}>
+                {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+              </button>
+            </div>
+          </motion.div>
 
-      {/* Button für neues Video */}
-      <div className={styles.nextButtonContainer}>
-        <button
-          onClick={handleNextVideo}
-          className={styles.nextButton}
-        >
-          Neuer Trend
-        </button>
-      </div>
+          <motion.div
+            key={`right-${currentVideoIndex}`}
+            className={styles.rightColumn}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            {filteredVideos.length > 0 && (
+              <>
+                <strong className="text-2xl">{filteredVideos[currentVideoIndex].title}</strong>
+                <p className="text-md my-4">{filteredVideos[currentVideoIndex].description}</p>
+                <a href={filteredVideos[currentVideoIndex].external_link} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
+                  Zum Externen Link
+                </a>
+              </>
+            )}
+          </motion.div>
+
+          
+          <button
+    onClick={handleNextVideo}
+    className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded-3xl flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 fixed bottom-4 right-4"
+>
+    <span className="hidden md:block">Spin again</span> {/* Text für Desktop */}
+    <span className="block md:hidden">🔄</span> {/* Icon für Mobile */}
+</button>
+
+        </div>
+      )}
     </div>
   );
 }
