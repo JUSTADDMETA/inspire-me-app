@@ -48,7 +48,13 @@ const CategoryButton = React.memo(({ category, isActive, onClick }: { category: 
   </button>
 ));
 
-const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }) => (
+type VideoPlayerProps = {
+  videoUrl: string;
+  isMuted: boolean;
+  toggleMute: () => void;
+};
+
+const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerProps) => (
   <div className="rounded-lg" style={{ position: 'relative' }}>
     <motion.video
       src={videoUrl}
