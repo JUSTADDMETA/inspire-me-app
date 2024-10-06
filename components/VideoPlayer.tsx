@@ -2,13 +2,31 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, PanInfo, useAnimation } from 'framer-motion';
 import { FaPlay, FaPause, FaVolumeMute, FaVolumeUp, FaExpand, FaCompress } from 'react-icons/fa';
 
-const VideoPlayer = ({ videoUrl, isMuted, toggleMute, title, description, externalLink, onSwipeLeft }) => {
+interface VideoPlayerProps {
+  videoUrl: string;
+  isMuted: boolean;
+  toggleMute: () => void;
+  title: string;
+  description: string;
+  externalLink: string;
+  onSwipeLeft: () => void;
+}
+
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
+  videoUrl, 
+  isMuted, 
+  toggleMute, 
+  title, 
+  description, 
+  externalLink, 
+  onSwipeLeft 
+}) => {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
-  const containerRef = useRef(null);
-  const videoRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const controls = useAnimation();
 
   const toggleFullscreen = useCallback(() => {
@@ -30,7 +48,7 @@ const VideoPlayer = ({ videoUrl, isMuted, toggleMute, title, description, extern
     }
   }, [isPlaying]);
 
-  const handleDrag = (event, info) => {
+  const handleDrag = (event: any, info: PanInfo) => {
     if (info.offset.y < -50 && !isExpanded) {
       controls.start({ height: 'auto' });
       setIsExpanded(true);
@@ -39,7 +57,7 @@ const VideoPlayer = ({ videoUrl, isMuted, toggleMute, title, description, extern
     }
   };
 
-  const handleDragEnd = (e, info) => {
+  const handleDragEnd = (e: any, info: PanInfo) => {
     if (info.offset.x < -100) {
       controls
         .start({ x: -300, opacity: 0, rotate: -10, transition: { duration: 0.3 } })
