@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlay, FaPause, FaVolumeMute, FaVolumeUp, FaExpand, FaCompress, FaRedo, FaFilter } from 'react-icons/fa';
+import { Filter, RotateCw, Shuffle } from "lucide-react"
+import VideoPlayer from './VideoPlayer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,12 +30,8 @@ const styles = {
   rightColumn: "p-0 lg:p-4 flex flex-col text-white",
   categoryButton: "w-fit py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   activeCategoryButton: "bg-gray-200 text-gray-800",
-  video: "w-full h-full object-fill",
   spinner: "spinner border-t-4 border-b-4 border-gray-900 rounded-full w-12 h-12 animate-spin",
-  muteButton: "absolute top-4 right-4 text-white z-30",
   externalLink: "w-full md:w-fit py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
-  nextButtonContainer: "w-full flex justify-center md:col-span-2 lg:col-span-3",
-  nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   notification: "fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg z-50",
 };
 
@@ -47,123 +44,6 @@ const CategoryButton = React.memo(({ category, isActive, onClick }: { category: 
   </button>
 ));
 
-type VideoPlayerProps = {
-  videoUrl: string;
-  isMuted: boolean;
-  toggleMute: () => void;
-};
-
-const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerProps) => {
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      if (containerRef.current?.requestFullscreen) {
-        containerRef.current.requestFullscreen();
-      } else if ((containerRef.current as any)?.webkitRequestFullscreen) {
-        (containerRef.current as any).webkitRequestFullscreen();
-      } else if ((containerRef.current as any)?.msRequestFullscreen) {
-        (containerRef.current as any).msRequestFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if ((document as any).webkitExitFullscreen) {
-        (document as any).webkitExitFullscreen();
-      } else if ((document as any).msExitFullscreen) {
-        (document as any).msExitFullscreen();
-      }
-    }
-  }, []);
-
-  const togglePlay = useCallback(() => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.addEventListener('play', () => setIsPlaying(true));
-      videoRef.current.addEventListener('pause', () => setIsPlaying(false));
-    }
-
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.removeEventListener('play', () => setIsPlaying(true));
-        videoRef.current.removeEventListener('pause', () => setIsPlaying(false));
-      }
-    };
-  }, []);
-
-  return (
-    <div 
-      ref={containerRef}
-      className="rounded-lg relative"
-      style={{ width: '100%', height: '100%', aspectRatio: '9/16' }}
-    >
-      {!isVideoLoaded && (
-        <div className="flex items-center justify-center w-full h-full bg-gray-800">
-          <div className="spinner border-t-4 border-b-4 border-gray-900 rounded-full w-12 h-12 animate-spin"></div>
-        </div>
-      )}
-      <motion.video
-        ref={videoRef}
-        src={videoUrl}
-        loop
-        muted={isMuted}
-        autoPlay
-        playsInline
-        onLoadedData={() => setIsVideoLoaded(true)}
-        style={{ width: '100%', height: '100%', objectFit: 'contain', display: isVideoLoaded ? 'block' : 'none' }}
-        className="rounded-lg"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
-      />
-      <div className="absolute top-4 right-4 flex gap-2 z-30">
-        <button onClick={togglePlay} className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center">
-          {isPlaying ? <FaPause size={16} /> : <FaPlay size={16} />}
-        </button>
-        <button onClick={toggleMute} className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center">
-          {isMuted ? <FaVolumeMute size={16} /> : <FaVolumeUp size={16} />}
-        </button>
-        <button onClick={toggleFullscreen} className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center">
-          {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
-        </button>
-      </div>
-    </div>
-  );
-});
-
 export default function SliderPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -175,6 +55,15 @@ export default function SliderPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
   const [showCategoryPopup, setShowCategoryPopup] = useState(false);
+
+  const toggleFilter = useCallback(() => {
+    if (activeCategory) {
+      setActiveCategory(null);
+      setFilteredVideos(videos);
+    } else {
+      setShowCategoryPopup(true);
+    }
+  }, [activeCategory, videos]);
 
   useEffect(() => {
     fetchVideos();
@@ -262,7 +151,7 @@ export default function SliderPage() {
       </AnimatePresence>
 
       {!showCard ? (
-        <div className="flex flex-col w-full items-center justify-center text-white h-96">
+        <div className="flex flex-col w-full items-center justify-center text-white h-screen">
           <button onClick={handleInspireMe} className="bg-[#defd3e] text-black py-2 px-6 rounded mt-32">
             Inspire Me
           </button>
@@ -294,13 +183,17 @@ export default function SliderPage() {
                 videoUrl={filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].videoUrl : ''}
                 isMuted={isMuted}
                 toggleMute={toggleMute}
+                title={filteredVideos[currentVideoIndex].title}
+                description={filteredVideos[currentVideoIndex].description}
+                externalLink={filteredVideos[currentVideoIndex].external_link}
+                onSwipeLeft={handleNextVideo}
               />
             )}
           </motion.div>
 
           <motion.div
             key={`right-${currentVideoIndex}`}
-            className={styles.rightColumn}
+            className={`${styles.rightColumn} hidden md:flex`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
@@ -315,28 +208,19 @@ export default function SliderPage() {
               </>
             )}
           </motion.div>
-
           <div className="fixed bottom-4 right-4 flex gap-2">
             <button
-              onClick={() => setShowCategoryPopup(true)}
-              className="md:hidden bg-[#defd3e] text-black w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              onClick={toggleFilter}
+              className="md:hidden bg-[#defd3e] text-black w-12 h-12 rounded-full flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <FaFilter />
+              {activeCategory ? <RotateCw className="h-5 w-5" /> : <Filter className="h-5 w-5" />}
             </button>
-            {activeCategory && (
-              <button
-                onClick={resetFilter}
-                className="bg-[#defd3e] text-black w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <FaRedo />
-              </button>
-            )}
             <button
               onClick={handleNextVideo}
               className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200"
             >
               <span className="hidden md:block">🔄 Spin again</span>
-              <span className="block md:hidden">🔄</span>
+              <Shuffle className="h-5 w-5 md:hidden" />
             </button>
           </div>
         </div>
