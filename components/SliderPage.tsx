@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { motion, AnimatePresence, PanInfo, useAnimation } from 'framer-motion';
-import { FaPlay, FaPause, FaVolumeMute, FaVolumeUp, FaExpand, FaCompress, FaRedo, FaFilter, FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaPlay, FaPause, FaVolumeMute, FaVolumeUp, FaExpand, FaCompress, FaRedo, FaFilter } from 'react-icons/fa';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,7 +36,6 @@ const styles = {
   nextButtonContainer: "w-full flex justify-center md:col-span-2 lg:col-span-3",
   nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   notification: "fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg z-50",
-  expandButton: "absolute top-4 right-16 text-white z-30",
 };
 
 const CategoryButton = React.memo(({ category, isActive, onClick }: { category: string, isActive: boolean, onClick: () => void }) => (
@@ -144,7 +143,7 @@ const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerPr
         playsInline
         onLoadedData={() => setIsVideoLoaded(true)}
         style={{ width: '100%', height: '100%', objectFit: 'contain', display: isVideoLoaded ? 'block' : 'none' }}
-        className="rounded-none md:rounded-lg"
+        className="rounded-lg"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -165,70 +164,7 @@ const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerPr
   );
 });
 
-const ExpandableContent: React.FC<{
-  title: string;
-  description: string;
-  externalLink: string;
-}> = ({ title, description, externalLink }) => {
-  const controls = useAnimation();
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const handleDrag = (event: any, info: PanInfo) => {
-    if (info.offset.y < -50 && !isExpanded) {
-      controls.start({ height: "auto", top: 0 });
-      setIsExpanded(true);
-    } else if (info.offset.y > 50 && isExpanded) {
-      controls.start({ height: "60px", top: "calc(100% - 60px)" });
-      setIsExpanded(false);
-    }
-  };
-
-  return (
-    <motion.div
-      className="fixed left-0 right-0 bg-gray-800 text-white p-4 rounded-t-2xl shadow-lg z-40"
-      initial={{ height: "60px", top: "calc(100% - 60px)" }}
-      animate={controls}
-      drag="y"
-      dragConstraints={{ top: 0, bottom: 0 }}
-      onDrag={handleDrag}
-      transition={{ type: "spring", damping: 30, stiffness: 300 }}
-    >
-      <div className="flex justify-center mb-2">
-        <div className="w-10 h-1 bg-gray-300 rounded-full" />
-      </div>
-      <h2 className="text-xl font-bold mb-2">{title}</h2>
-      {isExpanded && (
-        <>
-          <p className="mb-4">{description}</p>
-          <a
-            href={externalLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.externalLink}
-          >
-            Zum Externen Link
-          </a>
-        </>
-      )}
-      <button
-        onClick={() => {
-          if (isExpanded) {
-            controls.start({ height: "60px", top: "calc(100% - 60px)" });
-            setIsExpanded(false);
-          } else {
-            controls.start({ height: "auto", top: 0 });
-            setIsExpanded(true);
-          }
-        }}
-        className="absolute top-2 right-2 p-2"
-      >
-        {isExpanded ? <FaChevronDown /> : <FaChevronUp />}
-      </button>
-    </motion.div>
-  );
-};
-
-export default function VideoPage() {
+export default function SliderPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -316,8 +252,7 @@ export default function VideoPage() {
           <motion.div
             className={styles.notification}
             initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1,
- x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
             transition={{ duration: 0.5 }}
           >
@@ -365,7 +300,7 @@ export default function VideoPage() {
 
           <motion.div
             key={`right-${currentVideoIndex}`}
-            className={`${styles.rightColumn} hidden md:flex`}
+            className={styles.rightColumn}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
@@ -428,16 +363,6 @@ export default function VideoPage() {
               Schließen
             </button>
           </div>
-        </div>
-      )}
-
-      {filteredVideos.length > 0 && (
-        <div className="md:hidden">
-          <ExpandableContent
-            title={filteredVideos[currentVideoIndex].title}
-            description={filteredVideos[currentVideoIndex].description}
-            externalLink={filteredVideos[currentVideoIndex].external_link}
-          />
         </div>
       )}
     </div>
