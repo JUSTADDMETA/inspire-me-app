@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { FaHeart, FaVolumeMute, FaVolumeUp, FaRedo } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FaPlay, FaPause, FaVolumeMute, FaVolumeUp, FaExpand, FaCompress, FaRedo, FaFilter } from 'react-icons/fa';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,21 +24,21 @@ type Video = {
 const styles = {
   container: "flex flex-col w-full h-full text-white",
   gridContainer: "grid w-full justify-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-  leftColumn: "flex content-start flex-wrap gap-2 flex flex-row gap-2 md:col-span-2 lg:col-span-1 p-0 lg:p-4 h-full",
+  leftColumn: "hidden md:flex content-start flex-wrap gap-2 flex-row md:col-span-2 lg:col-span-1 p-0 lg:p-4 h-full",
   middleColumn: "relative",
   rightColumn: "p-0 lg:p-4 flex flex-col text-white",
   categoryButton: "w-fit py-2 px-6 bg-[#defd3e] text-black rounded-3xl inline-flex items-center justify-center whitespace-nowrap text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   activeCategoryButton: "bg-gray-200 text-gray-800",
   video: "w-full h-full object-fill",
   spinner: "spinner border-t-4 border-b-4 border-gray-900 rounded-full w-12 h-12 animate-spin",
-  muteButton: "absolute bottom-4 right-4 text-white z-30",
+  muteButton: "absolute top-4 right-4 text-white z-30",
   externalLink: "w-full md:w-fit py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   nextButtonContainer: "w-full flex justify-center md:col-span-2 lg:col-span-3",
   nextButton: "py-2 px-6 bg-[#defd3e] text-black rounded inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200",
   notification: "fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg z-50",
+  expandButton: "absolute top-4 right-16 text-white z-30",
 };
 
-// Memoized components
 const CategoryButton = React.memo(({ category, isActive, onClick }: { category: string, isActive: boolean, onClick: () => void }) => (
   <button
     onClick={onClick}
@@ -56,19 +56,91 @@ type VideoPlayerProps = {
 
 const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerProps) => {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      if (containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen();
+      } else if (containerRef.current?.webkitRequestFullscreen) {
+        containerRef.current.webkitRequestFullscreen();
+      } else if (containerRef.current?.msRequestFullscreen) {
+        containerRef.current.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.addEventListener('play', () => setIsPlaying(true));
+      videoRef.current.addEventListener('pause', () => setIsPlaying(false));
+    }
+
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.removeEventListener('play', () => setIsPlaying(true));
+        videoRef.current.removeEventListener('pause', () => setIsPlaying(false));
+      }
+    };
+  }, []);
 
   return (
-    <div className="rounded-lg" style={{ position: 'relative', width: '100%', height: '100%', aspectRatio: '9/16' }}>
+    <div 
+      ref={containerRef}
+      className="rounded-lg relative"
+      style={{ width: '100%', height: '100%', aspectRatio: '9/16' }}
+    >
       {!isVideoLoaded && (
         <div className="flex items-center justify-center w-full h-full bg-gray-800">
-          <div className={styles.spinner}></div>
+          <div className="spinner border-t-4 border-b-4 border-gray-900 rounded-full w-12 h-12 animate-spin"></div>
         </div>
       )}
       <motion.video
+        ref={videoRef}
         src={videoUrl}
-        autoPlay
         loop
         muted={isMuted}
+        autoPlay
         playsInline
         onLoadedData={() => setIsVideoLoaded(true)}
         style={{ width: '100%', height: '100%', objectFit: 'contain', display: isVideoLoaded ? 'block' : 'none' }}
@@ -78,9 +150,17 @@ const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerPr
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
       />
-      <button onClick={toggleMute} style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 2 }}>
-        {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-      </button>
+      <div className="absolute top-4 right-4 flex gap-2 z-30">
+        <button onClick={togglePlay} className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center">
+          {isPlaying ? <FaPause size={16} /> : <FaPlay size={16} />}
+        </button>
+        <button onClick={toggleMute} className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center">
+          {isMuted ? <FaVolumeMute size={16} /> : <FaVolumeUp size={16} />}
+        </button>
+        <button onClick={toggleFullscreen} className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center">
+          {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
+        </button>
+      </div>
     </div>
   );
 });
@@ -95,6 +175,7 @@ export default function VideoPage() {
   const [showCard, setShowCard] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [showCategoryPopup, setShowCategoryPopup] = useState(false);
 
   useEffect(() => {
     fetchVideos();
@@ -135,6 +216,7 @@ export default function VideoPage() {
       setActiveCategory(category);
       setCurrentVideoIndex(0);
     }
+    setShowCategoryPopup(false);
   }, [activeCategory, videos]);
 
   const resetFilter = useCallback(() => {
@@ -163,21 +245,6 @@ export default function VideoPage() {
     setCurrentVideoIndex(Math.floor(Math.random() * filteredVideos.length));
     setShowCard(true);
   }, [filteredVideos.length]);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      }
-    };
-  
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-  
-    // Cleanup function to remove the event listener
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
 
   return (
     <div className={styles.container}>
@@ -251,6 +318,12 @@ export default function VideoPage() {
           </motion.div>
 
           <div className="fixed bottom-4 right-4 flex gap-2">
+            <button
+              onClick={() => setShowCategoryPopup(true)}
+              className="md:hidden bg-[#defd3e] text-black w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <FaFilter />
+            </button>
             {activeCategory && (
               <button
                 onClick={resetFilter}
@@ -265,6 +338,30 @@ export default function VideoPage() {
             >
               <span className="hidden md:block">🔄 Spin again</span>
               <span className="block md:hidden">🔄</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showCategoryPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 w-80">
+            <h2 className="text-xl font-bold mb-4 text-black">Kategorien</h2>
+            <div className="grid grid-cols-2 gap-2">
+              {allCategories.map((category) => (
+                <CategoryButton
+                  key={category}
+                  category={category}
+                  isActive={activeCategory === category}
+                  onClick={() => filterVideosByCategory(category)}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => setShowCategoryPopup(false)}
+              className="mt-4 w-full py-2 px-4 bg-gray-200 text-black rounded"
+            >
+              Schließen
             </button>
           </div>
         </div>
