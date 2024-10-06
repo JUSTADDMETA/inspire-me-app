@@ -65,18 +65,18 @@ const VideoPlayer = React.memo(({ videoUrl, isMuted, toggleMute }: VideoPlayerPr
     if (!document.fullscreenElement) {
       if (containerRef.current?.requestFullscreen) {
         containerRef.current.requestFullscreen();
-      } else if (containerRef.current?.webkitRequestFullscreen) {
-        containerRef.current.webkitRequestFullscreen();
-      } else if (containerRef.current?.msRequestFullscreen) {
-        containerRef.current.msRequestFullscreen();
+      } else if ((containerRef.current as any)?.webkitRequestFullscreen) {
+        (containerRef.current as any).webkitRequestFullscreen();
+      } else if ((containerRef.current as any)?.msRequestFullscreen) {
+        (containerRef.current as any).msRequestFullscreen();
       }
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
       }
     }
   }, []);
