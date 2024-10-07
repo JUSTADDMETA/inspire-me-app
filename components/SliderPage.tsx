@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, RotateCw, Shuffle } from "lucide-react"
+import { Filter, RotateCw, Shuffle, X } from "lucide-react";
 import VideoPlayer from './VideoPlayer';
 
 const supabase = createClient(
@@ -55,6 +55,9 @@ export default function SliderPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
   const [showCategoryPopup, setShowCategoryPopup] = useState(false);
+  const [seenVideos, setSeenVideos] = useState<Set<number>>(new Set());
+  const [notificationShown, setNotificationShown] = useState(false);
+  const [allVideosInCategorySeen, setAllVideosInCategorySeen] = useState(false);
 
   const toggleFilter = useCallback(() => {
     if (activeCategory) {
@@ -102,8 +105,8 @@ export default function SliderPage() {
       const filtered = videos.filter(video => video.categories.includes(category));
       setFilteredVideos(filtered);
       setActiveCategory(category);
-      setCurrentVideoIndex(0);
     }
+    setCurrentVideoIndex(0);
     setShowCategoryPopup(false);
   }, [activeCategory, videos]);
 
@@ -111,6 +114,7 @@ export default function SliderPage() {
     setFilteredVideos(videos);
     setActiveCategory(null);
     setCurrentVideoIndex(0);
+    setAllVideosInCategorySeen(false);
   }, [videos]);
 
   const handleNextVideo = useCallback(() => {
@@ -119,11 +123,24 @@ export default function SliderPage() {
     }
     const nextIndex = (currentVideoIndex + 1) % filteredVideos.length;
     setCurrentVideoIndex(nextIndex);
-    if (nextIndex === 0 && !showNotification) {
+    
+    // Aktuelles Video als gesehen markieren
+    const currentVideoId = filteredVideos[currentVideoIndex].id;
+    setSeenVideos(prev => new Set(prev).add(currentVideoId));
+    
+    // Überprüfen, ob alle Videos gesehen wurden
+    if (seenVideos.size === videos.length - 1 && !notificationShown) {
+      setNotificationShown(true);
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
     }
-  }, [currentVideoIndex, filteredVideos.length, showNotification]);
+
+    // Überprüfen, ob alle Videos in der aktiven Kategorie gesehen wurden
+    if (activeCategory) {
+      const allSeenInCategory = filteredVideos.every(video => seenVideos.has(video.id));
+      setAllVideosInCategorySeen(allSeenInCategory);
+    }
+  }, [currentVideoIndex, filteredVideos, videos.length, seenVideos, notificationShown, activeCategory]);
 
   const toggleMute = useCallback(() => {
     setIsMuted(!isMuted);
@@ -154,6 +171,13 @@ export default function SliderPage() {
         <div className="flex flex-col w-full items-center justify-center text-white h-screen">
           <button onClick={handleInspireMe} className="bg-[#defd3e] text-black py-2 px-6 rounded">
             Inspire Me
+          </button>
+        </div>
+      ) : filteredVideos.length === 0 ? (
+        <div className="flex flex-col w-full items-center justify-center text-white h-screen">
+          <p className="mb-4">Keine Videos mehr in dieser Kategorie.</p>
+          <button onClick={resetFilter} className="bg-[#defd3e] text-black py-2 px-6 rounded">
+            Filter zurücksetzen
           </button>
         </div>
       ) : (
@@ -209,20 +233,36 @@ export default function SliderPage() {
             )}
           </motion.div>
           <div className="fixed bottom-4 right-4 flex gap-2">
+            {activeCategory && allVideosInCategorySeen ? (
+              <button
+                onClick={resetFilter}
+                className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <span className="hidden md:block">Filter zurücksetzen</span>
+                <X className="h-5 w-5 md:hidden" />
+              </button>
+            ) : (
+              <button
+                onClick={handleNextVideo}
+                className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200"
+              >
+                <span className="hidden md:block">🔄 Spin again</span>
+                <Shuffle className="h-5 w-5 md:hidden" />
+              </button>
+            )}
             <button
               onClick={toggleFilter}
               className="md:hidden bg-[#defd3e] text-black w-12 h-12 rounded-full flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              {activeCategory ? <RotateCw className="h-5 w-5" /> : <Filter className="h-5 w-5" />}
-            </button>
-            <button
-              onClick={handleNextVideo}
-              className="bg-[#defd3e] text-black w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-full md:rounded flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-200"
-            >
-              <span className="hidden md:block">🔄 Spin again</span>
-              <Shuffle className="h-5 w-5 md:hidden" />
+              <Filter className="h-5 w-5" />
             </button>
           </div>
+        </div>
+      )}
+
+      {activeCategory && allVideosInCategorySeen && (
+        <div className="fixed top-4 right-4 bg-[#defd3e] text-black py-2 px-4 rounded shadow-lg z-50">
+          Alle Videos in dieser Kategorie gesehen. Filter zurücksetzen.
         </div>
       )}
 
