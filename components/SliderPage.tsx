@@ -24,7 +24,7 @@ type Video = {
 
 const styles = {
   container: "flex flex-col w-full h-full text-white h-screen",
-  gridContainer: "grid w-full justify-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pt-8",
+  gridContainer: "grid w-full justify-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pt-0 md:pt-8",
   leftColumn: "hidden md:flex content-start flex-wrap gap-2 flex-row md:col-span-2 lg:col-span-1 p-0 lg:p-4 h-full",
   middleColumn: "relative",
   rightColumn: "p-0 lg:p-4 flex flex-col text-white",
@@ -59,14 +59,9 @@ export default function SliderPage() {
   const [notificationShown, setNotificationShown] = useState(false);
   const [allVideosInCategorySeen, setAllVideosInCategorySeen] = useState(false);
 
-  const toggleFilter = useCallback(() => {
-    if (activeCategory) {
-      setActiveCategory(null);
-      setFilteredVideos(videos);
-    } else {
-      setShowCategoryPopup(true);
-    }
-  }, [activeCategory, videos]);
+  const shuffleArray = (array: Video[]) => {
+    return array.sort(() => Math.random() - 0.5);
+  };
 
   useEffect(() => {
     fetchVideos();
@@ -85,8 +80,9 @@ export default function SliderPage() {
         videoUrl: `https://ddbyrpmrexntgqszrays.supabase.co/storage/v1/object/public/videos/${video.file_name}`,
         likes: video.likes || 0
       }));
-      setVideos(parsedData);
-      setFilteredVideos(parsedData);
+      const shuffledVideos = shuffleArray(parsedData);
+      setVideos(shuffledVideos);
+      setFilteredVideos(shuffledVideos);
   
       const uniqueCategories = new Set<string>();
       parsedData.forEach((video) => {
@@ -99,7 +95,8 @@ export default function SliderPage() {
 
   const filterVideosByCategory = useCallback((category: string) => {
     if (activeCategory === category) {
-      setFilteredVideos(videos);
+      const shuffledVideos = shuffleArray(videos);
+      setFilteredVideos(shuffledVideos);
       setActiveCategory(null);
     } else {
       const filtered = videos.filter(video => video.categories.includes(category));
@@ -111,7 +108,8 @@ export default function SliderPage() {
   }, [activeCategory, videos]);
 
   const resetFilter = useCallback(() => {
-    setFilteredVideos(videos);
+    const shuffledVideos = shuffleArray(videos);
+    setFilteredVideos(shuffledVideos);
     setActiveCategory(null);
     setCurrentVideoIndex(0);
     setAllVideosInCategorySeen(false);
@@ -204,34 +202,39 @@ export default function SliderPage() {
               <div className={styles.spinner}></div>
             ) : (
               <VideoPlayer
-                videoUrl={filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].videoUrl : ''}
-                isMuted={isMuted}
-                toggleMute={toggleMute}
-                title={filteredVideos[currentVideoIndex].title}
-                description={filteredVideos[currentVideoIndex].description}
-                externalLink={filteredVideos[currentVideoIndex].external_link}
-                onSwipeLeft={handleNextVideo}
-              />
+              videoUrl={filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].videoUrl : ''}
+              isMuted={isMuted}
+              toggleMute={toggleMute}
+              title={filteredVideos[currentVideoIndex].title}
+              description={filteredVideos[currentVideoIndex].description}
+              externalLink={filteredVideos[currentVideoIndex].external_link}
+              onSwipeLeft={handleNextVideo}
+              categories={filteredVideos[currentVideoIndex].categories} // Kategorien übergeben
+            />
             )}
           </motion.div>
 
           <motion.div
-            key={`right-${currentVideoIndex}`}
-            className={`${styles.rightColumn} hidden md:flex`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            {filteredVideos.length > 0 && (
-              <>
-                <strong className="text-2xl">{filteredVideos[currentVideoIndex].title}</strong>
-                <p className="text-md mt-4 mb-6">{filteredVideos[currentVideoIndex].description}</p>
-                <a href={filteredVideos[currentVideoIndex].external_link} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
-                  Zum Externen Link
-                </a>
-              </>
-            )}
-          </motion.div>
+  key={`right-${currentVideoIndex}`}
+  className={`${styles.rightColumn} hidden md:flex`}
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5, delay: 0.5 }}
+>
+  {filteredVideos.length > 0 && (
+    <>
+          <p className="text-sm text-gray-400 mb-2">
+        Kategorien: {filteredVideos[currentVideoIndex].categories.join(', ')}
+      </p>
+      <strong className="text-2xl">{filteredVideos[currentVideoIndex].title}</strong>
+      <p className="text-md mt-4 mb-6">{filteredVideos[currentVideoIndex].description}</p>
+
+      <a href={filteredVideos[currentVideoIndex].external_link} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
+        Zum Externen Link
+      </a>
+    </>
+  )}
+</motion.div>
           <div className="fixed bottom-4 right-4 flex gap-2">
             {activeCategory && allVideosInCategorySeen ? (
               <button
@@ -251,7 +254,7 @@ export default function SliderPage() {
               </button>
             )}
             <button
-              onClick={toggleFilter}
+              onClick={() => setShowCategoryPopup(true)}
               className="md:hidden bg-[#defd3e] text-black w-12 h-12 rounded-full flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Filter className="h-5 w-5" />

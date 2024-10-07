@@ -10,6 +10,7 @@ interface VideoPlayerProps {
   description: string;
   externalLink: string;
   onSwipeLeft: () => void;
+  categories: string[]; // Neue Prop für Kategorien
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
@@ -19,7 +20,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   title, 
   description, 
   externalLink, 
-  onSwipeLeft 
+  onSwipeLeft,
+  categories // Neue Prop für Kategorien
 }) => {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -95,7 +97,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <motion.div
       ref={containerRef}
-      className="rounded-lg relative overflow-hidden"
+      className="rounded-none md:rounded-lg relative overflow-hidden"
       style={{ width: '100%', height: isExpanded ? 'auto' : '100%', aspectRatio: '9/16' }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
@@ -158,8 +160,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
           {isExpanded && (
             <div>
+              <p className="text-sm text-gray-400 mb-2">
+                Kategorien: {categories.join(', ')}
+              </p>
               <h2 className="text-xl font-bold mb-2">{title}</h2>
-              <p className="mb-4">{description}</p>
+              <p className="mb-4 text-sm md:text-base">{description}</p>
               <a
                 href={externalLink}
                 target="_blank"
