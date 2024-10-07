@@ -38,7 +38,7 @@ export default function RootLayout({
             <div className="flex-1 w-full flex flex-col items-center">
               <Suspense fallback={<div>Loading...</div>}>
                 <MemoizedNav />
-                <div className="flex flex-col w-full pt-16 md:pt-0 -mt-16">
+                <div className="flex flex-col w-full">
                   {children}
                 </div>
                 <MemoizedFooter />
