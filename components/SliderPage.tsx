@@ -23,7 +23,7 @@ type Video = {
 };
 
 const styles = {
-  container: "flex flex-col w-full h-full text-white h-screen",
+  container: "flex flex-col w-full h-full text-white h-fit md:h-screen",
   gridContainer: "grid w-full justify-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pt-0 md:pt-8",
   leftColumn: "hidden md:flex content-start flex-wrap gap-2 flex-row md:col-span-2 lg:col-span-1 p-0 lg:p-4 h-full",
   middleColumn: "relative",
