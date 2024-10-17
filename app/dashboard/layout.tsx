@@ -9,7 +9,7 @@ const styles = {
   sectionTitle: "font-bold text-2xl mb-4",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function DashboLayout({ children }: { children: React.ReactNode }) {
   return (
 
         <div className={styles.container}>

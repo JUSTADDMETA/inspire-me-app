@@ -2,14 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+interface Profile {
+  username: string;
+  full_name: string;
+  avatar_url: string;
+  website: string;
+}
+
 const Profile = () => {
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState<Profile>({
     username: '',
     full_name: '',
     avatar_url: '',
@@ -18,14 +26,14 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
         console.error('Error getting session:', error.message);
-        setError('Error getting session: ' + error.message);
+        setError('Error getting session. Please try again.');
         return;
       }
 
@@ -33,7 +41,7 @@ const Profile = () => {
         setUser(session.user);
         getProfile(session.user);
       } else {
-        setError('User not logged in');
+        setError('User not logged in. Please sign in to view your profile.');
       }
     };
 
@@ -51,7 +59,7 @@ const Profile = () => {
           avatar_url: '',
           website: ''
         });
-        setError('User not logged in');
+        setError('User not logged in. Please sign in to view your profile.');
       }
     });
 
@@ -60,7 +68,7 @@ const Profile = () => {
     };
   }, []);
 
-  const getProfile = async (user) => {
+  const getProfile = async (user: User) => {
     try {
       setLoading(true);
       const { data, error, status } = await supabase
@@ -78,13 +86,14 @@ const Profile = () => {
       }
     } catch (error) {
       console.error('Error loading user data:', error.message);
-      setError('Error loading user data: ' + error.message);
+      setError('Error loading user data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateProfile = async () => {
+  const updateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
       setLoading(true);
 
@@ -110,7 +119,7 @@ const Profile = () => {
       setError(null);
     } catch (error) {
       console.error('Error updating user data:', error.message);
-      setError('Error updating profile: ' + error.message);
+      setError('Error updating profile. Please try again.');
       setSuccess(null);
     } finally {
       setLoading(false);
@@ -125,8 +134,12 @@ const Profile = () => {
     });
   };
 
+  if (loading) {
+    return <div className="text-center mt-10">Loading...</div>;
+  }
+
   return (
-    <div className="form-widget max-w-md mx-auto mt-10 p-4 bg-gray-800 rounded shadow-md">
+    <form onSubmit={updateProfile} className="form-widget max-w-md mx-auto mt-10 p-4 bg-gray-800 rounded shadow-md">
       <h1 className="text-2xl mb-4 text-white">Your Profile</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       {success && <p className="text-green-500 mb-4">{success}</p>}
@@ -176,14 +189,14 @@ const Profile = () => {
       </div>
       <div>
         <button
-          onClick={updateProfile}
+          type="submit"
           disabled={loading}
           className="w-full py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:opacity-50"
         >
           {loading ? 'Loading ...' : 'Update Profile'}
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 

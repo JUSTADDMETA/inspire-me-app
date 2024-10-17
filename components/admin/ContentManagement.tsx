@@ -18,7 +18,7 @@ type Video = {
   external_link: string;
 };
 
-export default function AdminView() {
+export default function ContentManagement() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
