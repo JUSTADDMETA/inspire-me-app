@@ -1,7 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import UploadPage from "@/components/admin/UploadPage";
-import AdminView from "@/components/admin/AdminView";
 import UserManagement from "@/components/admin/UserManagement";
 
 
@@ -27,9 +25,6 @@ export default async function ProtectedPage() {
   return (
     <div className={styles.container}>
       <div>
-        <h2 className={styles.sectionTitle}>Upload Files to Supabase Bucket</h2>
-        <UploadPage />
-        <AdminView />
         <UserManagement />
       </div>
     </div>

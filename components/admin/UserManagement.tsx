@@ -48,7 +48,7 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 h-screen">
       <h2 className="text-lg font-bold mb-4">Benutzerverwaltung</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {users.map((user) => (

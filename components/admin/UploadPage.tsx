@@ -131,14 +131,14 @@ export default function UploadPage() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
-    <div className="flex flex-col items-center justify-center text-black relative">
+    <div className="flex flex-col items-center justify-center text-black relative w-full">
       {notification && (
         <div className="absolute top-4 right-4 bg-green-500 text-white p-2 rounded">
           {notification}
         </div>
       )}
-      <section className="w-full max-w-md p-4 border-b-2 border-gray-300 border rounded">
-        <h2 className="text-lg font-bold mb-4">Video Upload</h2>
+      <section className="w-full p-4 h-screen">
+        <h2 className="text-lg font-bold mb-4 text-gray-300">Video Upload</h2>
         <div className="space-y-2">
           <input
             type="text"
