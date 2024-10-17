@@ -4,6 +4,7 @@ import UploadPage from "@/components/admin/UploadPage";
 
 
 const styles = {
+  mainContent: "pt-14",
   container: "flex-1 w-full flex flex-col gap-12",
   infoBox: "bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center",
   userDetails: "flex flex-col gap-2 items-start",
@@ -24,7 +25,7 @@ export default async function ProtectedPage() {
 
   return (
     <div className={styles.container}>
-      <div>
+      <div className={styles.mainContent}>
         <UploadPage />
       </div>
     </div>

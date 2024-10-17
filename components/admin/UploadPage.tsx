@@ -138,7 +138,6 @@ export default function UploadPage() {
         </div>
       )}
       <section className="w-full p-4 h-screen">
-        <h2 className="text-lg font-bold mb-4 text-gray-300">Video Upload</h2>
         <div className="space-y-2">
           <input
             type="text"

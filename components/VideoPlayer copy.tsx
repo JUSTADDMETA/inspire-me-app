@@ -113,6 +113,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setVolume(volume);
     if (videoRef.current) {
       videoRef.current.volume = volume;
+      if (volume === 0) {
+        toggleMute();
+      }
     }
   };
 
@@ -122,6 +125,46 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoRef.current) {
       videoRef.current.currentTime = time;
     }
+  };
+
+  const handleMuteClick = () => {
+    toggleMute();
+    if (isMuted) {
+      setVolume(1);
+      if (videoRef.current) {
+        videoRef.current.volume = 1;
+      }
+    } else {
+      setVolume(0);
+      if (videoRef.current) {
+        videoRef.current.volume = 0;
+      }
+    }
+  };
+
+  const handleVolumeSliderClick = () => {
+    setShowVolumeSlider(!showVolumeSlider);
+  };
+
+  const handleVolumeMouseEnter = () => {
+    if (volumeSliderTimeout.current) {
+      clearTimeout(volumeSliderTimeout.current);
+    }
+    setShowVolumeSlider(true);
+  };
+
+  const handleVolumeMouseLeave = () => {
+    volumeSliderTimeout.current = setTimeout(() => {
+      setShowVolumeSlider(false);
+    }, 500); // Verzögerung von 500ms
+  };
+
+  const handleVideoMouseEnter = () => {
+    setShowPlayButton(true);
+  };
+
+  const handleVideoMouseLeave = () => {
+    setShowPlayButton(false);
   };
 
   return (
@@ -134,6 +177,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       dragElastic={0.2}
       onDragEnd={handleDragEnd}
       animate={controls}
+      onMouseEnter={handleVideoMouseEnter}
+      onMouseLeave={handleVideoMouseLeave}
     >
       {!isVideoLoaded && (
         <div className="flex items-center justify-center w-full h-full bg-gray-800">
@@ -148,34 +193,50 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         autoPlay
         playsInline
         onLoadedData={() => setIsVideoLoaded(true)}
-        style={{ width: '100%', height: '100%' }}
+        onClick={togglePlay}
+        style={{ width: '100%', height: '100%', cursor: 'pointer' }}
         className="rounded-none md:rounded-lg"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
       />
+      {showPlayButton && (
+        <div className="absolute inset-0 flex items-center justify-center z-20">
+          <button
+            onClick={togglePlay}
+            className="w-16 h-16 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center"
+          >
+            {isPlaying ? <FaPause size={32} /> : <FaPlay size={32} />}
+          </button>
+        </div>
+      )}
       <div className="absolute top-4 right-4 flex gap-2 z-30">
-        <button
-          onClick={togglePlay}
-          className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center"
-        >
-          {isPlaying ? <FaPause size={16} /> : <FaPlay size={16} />}
-        </button>
         <div
           className="relative"
-          onMouseEnter={() => setShowVolumeSlider(true)}
-          onMouseLeave={() => setShowVolumeSlider(false)}
+          onMouseEnter={handleVolumeMouseEnter}
+          onMouseLeave={handleVolumeMouseLeave}
+          onClick={handleVolumeSliderClick}
         >
           <button
-            onClick={() => {
-              toggleMute();
-              setVolume(isMuted ? 1 : 0);
-            }}
+            onClick={handleMuteClick}
             className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center"
           >
             {isMuted ? <FaVolumeMute size={16} /> : <FaVolumeUp size={16} />}
           </button>
+          {showVolumeSlider && (
+            <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-24 bg-black p-2 rounded-md">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={volume}
+                onChange={handleVolumeChange}
+                className="w-full"
+              />
+            </div>
+          )}
         </div>
         <button
           onClick={toggleFullscreen}
@@ -184,12 +245,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
         </button>
       </div>
-      <motion.div
-        className="absolute bottom-20 left-4 right-4 flex items-center gap-2 z-30 md:bottom-4"
-        initial={{ opacity: 1 }}
-        animate={{ opacity: isExpanded ? 0 : 1 }}
-        transition={{ duration: 0.5 }}
-      >
+      <div className="absolute bottom-20 left-4 right-4 flex items-center gap-2 z-30 md:bottom-4">
         <input
           type="range"
           min="0"
@@ -199,9 +255,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           onChange={handleSeek}
           className="flex-1 appearance-none bg-transparent [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-black/50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
         />
-      </motion.div>
+      </div>
       <motion.div
-        className="md:hidden absolute bottom-0 left-0 right-0 bg-black/70 text-white rounded-t-s cursor-pointer"
+        className="md:hidden absolute bottom-0 left-0 right-0 bg-black/70 text-white rounded-b-lg cursor-pointer"
         initial={{ height: '60px' }}
         animate={{ height: isExpanded ? 'auto' : '60px' }}
         drag="y"

@@ -132,7 +132,6 @@ export default function AdminView() {
           Sortiere: {sortOrder === 'asc' ? 'Aufsteigend' : 'Absteigend'}
         </button>
       </div>
-      <h2 className="text-lg font-bold mb-4 text-gray-300">Content Management</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {filteredVideos.map((video) => (
           <div key={video.id} className="card p-4 border border-gray-300 rounded-lg shadow-md">
