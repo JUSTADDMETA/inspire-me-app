@@ -124,6 +124,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
+  const handleMouseEnter = () => {
+    setShowPlayButton(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowPlayButton(false);
+  };
+
   return (
     <motion.div
       ref={containerRef}
@@ -134,6 +142,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       dragElastic={0.2}
       onDragEnd={handleDragEnd}
       animate={controls}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {!isVideoLoaded && (
         <div className="flex items-center justify-center w-full h-full bg-gray-800">
@@ -148,20 +158,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         autoPlay
         playsInline
         onLoadedData={() => setIsVideoLoaded(true)}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', cursor: 'pointer' }}
         className="rounded-none md:rounded-lg"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
+        onClick={togglePlay}
       />
+      {showPlayButton && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <button
+            className="w-16 h-16 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center"
+          >
+            {isPlaying ? <FaPause size={32} /> : <FaPlay size={32} />}
+          </button>
+        </div>
+      )}
       <div className="absolute top-4 right-4 flex gap-2 z-30">
-        <button
-          onClick={togglePlay}
-          className="w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center"
-        >
-          {isPlaying ? <FaPause size={16} /> : <FaPlay size={16} />}
-        </button>
         <div
           className="relative"
           onMouseEnter={() => setShowVolumeSlider(true)}
@@ -176,6 +190,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           >
             {isMuted ? <FaVolumeMute size={16} /> : <FaVolumeUp size={16} />}
           </button>
+          {showVolumeSlider && (
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+              className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-24"
+            />
+          )}
         </div>
         <button
           onClick={toggleFullscreen}
@@ -201,13 +226,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         />
       </motion.div>
       <motion.div
-        className="md:hidden absolute bottom-0 left-0 right-0 bg-black/70 text-white rounded-t-s cursor-pointer"
+        className="md:hidden absolute bottom-0 left-0 right-0 bg-black/70 text-white rounded-t-lg cursor-pointer"
         initial={{ height: '60px' }}
         animate={{ height: isExpanded ? 'auto' : '60px' }}
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         onDrag={handleDrag}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()} // Verhindert, dass der Klick das Video beeinflusst
       >
         <div className="p-4">
           <div className="flex justify-center mb-2">
