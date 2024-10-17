@@ -8,6 +8,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.663.0",
     "@heroicons/react": "^2.1.5",
+    "@next-auth/supabase-adapter": "^0.2.1",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.1",
     "@radix-ui/react-label": "^2.1.0",
@@ -21,6 +22,7 @@
     "geist": "^1.2.1",
     "lucide-react": "^0.436.0",
     "next": "latest",
+    "next-auth": "^4.24.8",
     "next-themes": "^0.3.0",
     "prettier": "^3.3.3",
     "react": "18.2.0",

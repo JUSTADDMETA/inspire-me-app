@@ -21,13 +21,15 @@ type Video = {
 export default function AdminView() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [allCategories, setAllCategories] = useState<string[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
   const [videoToEdit, setVideoToEdit] = useState<Video | null>(null);
 
   useEffect(() => {
     fetchVideos();
+    fetchCategories();
   }, []);
 
   const fetchVideos = async () => {
@@ -44,6 +46,23 @@ export default function AdminView() {
         videoUrl: `https://ddbyrpmrexntgqszrays.supabase.co/storage/v1/object/public/videos/${video.file_name}`
       }));
       setVideos(parsedData);
+    }
+  };
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('videos')
+      .select('categories');
+
+    if (error) {
+      console.error('Fehler beim Abrufen der Kategorien:', error);
+    } else {
+      const uniqueCategories = new Set<string>();
+      data.forEach((video: any) => {
+        const categories = JSON.parse(video.categories);
+        categories.forEach((category: string) => uniqueCategories.add(category));
+      });
+      setAllCategories(Array.from(uniqueCategories));
     }
   };
 
@@ -115,12 +134,17 @@ export default function AdminView() {
   };
 
   const filteredVideos = videos
-    .filter(video => video.title.toLowerCase().includes(searchTerm.toLowerCase()) || video.categories.join(', ').toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => sortOrder === 'asc' ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title));
+    .filter(video => 
+      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      video.categories.join(', ').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(video => 
+      selectedCategory === '' || video.categories.includes(selectedCategory)
+    );
 
   return (
     <div className="p-4">
-      <div className="flex justify-between mb-4">
+      <div className="flex flex-wrap justify-between mb-4 gap-2">
         <input
           type="text"
           placeholder="Suche..."
@@ -128,9 +152,18 @@ export default function AdminView() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="p-2 border rounded"
         />
-        <button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="p-2 bg-gray-300 rounded">
-          Sortiere: {sortOrder === 'asc' ? 'Aufsteigend' : 'Absteigend'}
-        </button>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="p-2 border rounded bg-white text-black"
+        >
+          <option value="">Alle Kategorien</option>
+          {allCategories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {filteredVideos.map((video) => (

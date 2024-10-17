@@ -171,12 +171,13 @@ export default function SliderPage() {
             Inspire Me
           </button>
         </div>
+      ) : isLoading ? (
+        <div className="flex flex-col w-full items-center justify-center text-white h-screen">
+          <div className={styles.spinner}></div>
+        </div>
       ) : filteredVideos.length === 0 ? (
         <div className="flex flex-col w-full items-center justify-center text-white h-screen">
-          <p className="mb-4">Keine Videos mehr in dieser Kategorie.</p>
-          <button onClick={resetFilter} className="bg-[#defd3e] text-black py-2 px-6 rounded">
-            Filter zurücksetzen
-          </button>
+          <p className="mb-4">Keine Videos gefunden. Komme später wieder.</p>
         </div>
       ) : (
         <div className={styles.gridContainer}>
@@ -198,11 +199,8 @@ export default function SliderPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            {isLoading ? (
-              <div className={styles.spinner}></div>
-            ) : (
-              <VideoPlayer
-              videoUrl={filteredVideos.length > 0 ? filteredVideos[currentVideoIndex].videoUrl : ''}
+            <VideoPlayer
+              videoUrl={filteredVideos[currentVideoIndex].videoUrl}
               isMuted={isMuted}
               toggleMute={toggleMute}
               title={filteredVideos[currentVideoIndex].title}
@@ -211,30 +209,29 @@ export default function SliderPage() {
               onSwipeLeft={handleNextVideo}
               categories={filteredVideos[currentVideoIndex].categories} // Kategorien übergeben
             />
-            )}
           </motion.div>
 
           <motion.div
-  key={`right-${currentVideoIndex}`}
-  className={`${styles.rightColumn} hidden md:flex`}
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.5, delay: 0.5 }}
->
-  {filteredVideos.length > 0 && (
-    <>
-          <p className="text-sm text-gray-400 mb-2">
-        Kategorien: {filteredVideos[currentVideoIndex].categories.join(', ')}
-      </p>
-      <strong className="text-2xl">{filteredVideos[currentVideoIndex].title}</strong>
-      <p className="text-md mt-4 mb-6">{filteredVideos[currentVideoIndex].description}</p>
+            key={`right-${currentVideoIndex}`}
+            className={`${styles.rightColumn} hidden md:flex`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            {filteredVideos.length > 0 && (
+              <>
+                <p className="text-sm text-gray-400 mb-2">
+                  Kategorien: {filteredVideos[currentVideoIndex].categories.join(', ')}
+                </p>
+                <strong className="text-2xl">{filteredVideos[currentVideoIndex].title}</strong>
+                <p className="text-md mt-4 mb-6">{filteredVideos[currentVideoIndex].description}</p>
 
-      <a href={filteredVideos[currentVideoIndex].external_link} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
-        Zum Externen Link
-      </a>
-    </>
-  )}
-</motion.div>
+                <a href={filteredVideos[currentVideoIndex].external_link} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
+                  Zum Externen Link
+                </a>
+              </>
+            )}
+          </motion.div>
           <div className="fixed bottom-4 right-4 flex gap-2">
             {activeCategory && allVideosInCategorySeen ? (
               <button

@@ -15,6 +15,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className={styles.container}>
           <aside className={styles.sidebar}>
             <nav className="flex flex-col gap-2">
+            <Link href="/dashboard" className={styles.link}>
+                Overview
+              </Link>
               <Link href="/dashboard/admin/upload" className={styles.link}>
                 Upload
               </Link>
