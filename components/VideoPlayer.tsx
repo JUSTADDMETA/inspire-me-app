@@ -190,17 +190,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           >
             {isMuted ? <FaVolumeMute size={16} /> : <FaVolumeUp size={16} />}
           </button>
-          {showVolumeSlider && (
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              onChange={handleVolumeChange}
-              className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-24"
-            />
-          )}
         </div>
         <button
           onClick={toggleFullscreen}
