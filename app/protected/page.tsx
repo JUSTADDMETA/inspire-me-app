@@ -1,8 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import UploadPage from "@/components/UploadPage";
-import AdminView from "@/components/AdminView";
-import UserManagement from "@/components/UserManagement";
+import UploadPage from "@/components/admin/UploadPage";
+import AdminView from "@/components/admin/AdminView";
+import UserManagement from "@/components/admin/UserManagement";
 
 
 const styles = {

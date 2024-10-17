@@ -1,5 +1,4 @@
 import React, { Suspense } from 'react';
-import DeployButton from "@/components/deploy-button";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
 import Nav from "@/components/Nav";

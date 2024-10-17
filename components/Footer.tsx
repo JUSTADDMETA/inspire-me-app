@@ -1,4 +1,4 @@
-import { ThemeSwitcher } from "@/components/theme-switcher";
+
 
 export default function Footer() {
   return (
@@ -14,7 +14,6 @@ export default function Footer() {
           JUSTADDSUGAR
         </a>
       </p>
-      <ThemeSwitcher />
     </footer>
   );
 }

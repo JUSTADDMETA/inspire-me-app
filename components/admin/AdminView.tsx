@@ -24,6 +24,7 @@ export default function AdminView() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showConfirm, setShowConfirm] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
+  const [videoToEdit, setVideoToEdit] = useState<Video | null>(null);
 
   useEffect(() => {
     fetchVideos();
@@ -48,33 +49,58 @@ export default function AdminView() {
 
   const handleDelete = async (id: number, fileName: string) => {
     try {
-      // Lösche das Video aus dem Bucket
       const { error: deleteError } = await supabase
         .storage
-        .from('videos') // Stelle sicher, dass dies der korrekte Bucket-Name ist
-        .remove([fileName]); // Datei mit vollständigem Pfad, falls nötig
-  
+        .from('videos')
+        .remove([fileName]);
+
       if (deleteError) {
         throw new Error('Fehler beim Löschen des Videos im Bucket: ' + deleteError.message);
       }
-  
-      // Lösche den Datenbankeintrag
+
       const { error: dbError } = await supabase
         .from('videos')
         .delete()
         .eq('id', id);
-  
+
       if (dbError) {
         throw new Error('Fehler beim Löschen des Datenbankeintrags: ' + dbError.message);
       }
-  
+
       setVideos(videos.filter(video => video.id !== id));
       setShowConfirm(false);
     } catch (error) {
       if (error instanceof Error) {
         console.error(error.message);
       } else {
-        console.error('An unexpected error occurred:', error);
+        console.error('Ein unerwarteter Fehler ist aufgetreten:', error);
+      }
+    }
+  };
+
+  const handleEdit = async (updatedVideo: Video) => {
+    try {
+      const { error } = await supabase
+        .from('videos')
+        .update({
+          title: updatedVideo.title,
+          description: updatedVideo.description,
+          categories: JSON.stringify(updatedVideo.categories),
+          external_link: updatedVideo.external_link
+        })
+        .eq('id', updatedVideo.id);
+
+      if (error) {
+        throw new Error('Fehler beim Aktualisieren des Videos: ' + error.message);
+      }
+
+      setVideos(videos.map(video => video.id === updatedVideo.id ? updatedVideo : video));
+      setVideoToEdit(null);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error('Ein unerwarteter Fehler ist aufgetreten:', error);
       }
     }
   };
@@ -82,6 +108,10 @@ export default function AdminView() {
   const confirmDelete = (video: Video) => {
     setVideoToDelete(video);
     setShowConfirm(true);
+  };
+
+  const startEdit = (video: Video) => {
+    setVideoToEdit(video);
   };
 
   const filteredVideos = videos
@@ -111,6 +141,9 @@ export default function AdminView() {
             <p>Kategorien: {video.categories.join(', ')}</p>
             <p>Externer Link: <a href={video.external_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{video.external_link}</a></p>
             <video src={video.videoUrl} controls className="mt-2 w-full h-auto" style={{ aspectRatio: '9/16' }} />
+            <button onClick={() => startEdit(video)} className="mt-2 p-2 bg-blue-500 text-white rounded">
+              Bearbeiten
+            </button>
             <button onClick={() => confirmDelete(video)} className="mt-2 p-2 bg-red-500 text-white rounded">
               Löschen
             </button>
@@ -125,6 +158,45 @@ export default function AdminView() {
             <div className="flex justify-end gap-2 mt-4">
               <button onClick={() => setShowConfirm(false)} className="p-2 bg-gray-300 rounded">Nein</button>
               <button onClick={() => handleDelete(videoToDelete.id, videoToDelete.file_name)} className="p-2 bg-red-500 text-white rounded">Ja</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {videoToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded shadow-lg">
+            <h3>Video bearbeiten: {videoToEdit.title}</h3>
+            <input
+              type="text"
+              value={videoToEdit.title}
+              onChange={(e) => setVideoToEdit({ ...videoToEdit, title: e.target.value })}
+              className="p-2 border rounded mb-2"
+            />
+            <textarea
+              value={videoToEdit.description}
+              onChange={(e) => setVideoToEdit({ ...videoToEdit, description: e.target.value })}
+              className="p-2 border rounded mb-2"
+            />
+            <input
+              type="text"
+              value={videoToEdit.external_link}
+              onChange={(e) => setVideoToEdit({ ...videoToEdit, external_link: e.target.value })}
+              className="p-2 border rounded mb-2"
+            />
+            <input
+              type="text"
+              value={videoToEdit.categories.join(', ')}
+              onChange={(e) => setVideoToEdit({ ...videoToEdit, categories: e.target.value.split(',').map(cat => cat.trim()) })}
+              className="p-2 border rounded mb-2"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => handleEdit(videoToEdit)} className="p-2 bg-green-500 text-white rounded">
+                Speichern
+              </button>
+              <button onClick={() => setVideoToEdit(null)} className="p-2 bg-gray-300 rounded">
+                Abbrechen
+              </button>
             </div>
           </div>
         </div>
