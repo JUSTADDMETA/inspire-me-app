@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Nav from "@/components/nav/Nav";
+import Footer from "@/components/footer/Footer";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL

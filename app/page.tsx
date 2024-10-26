@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import SliderPage from "@/components/SliderPage";
+import SliderPage from "@/components/user/SliderPage";
 
 // Memoize the SliderPage component
 const MemoizedSliderPage = React.memo(SliderPage);
