@@ -85,8 +85,9 @@ const Profile = () => {
         setProfile(data);
       }
     } catch (error) {
+      if (error instanceof Error) {
       console.error('Error loading user data:', error.message);
-      setError('Error loading user data. Please try again.');
+      setError('Error loading user data. Please try again.');}
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ const Profile = () => {
       };
 
       const { error } = await supabase.from('profiles').upsert(updates, {
-        returning: 'minimal', // Don't return the value after inserting
+        onConflict: 'id', // returning minimal removed, Don't return the value after inserting
       });
 
       if (error) {
@@ -118,8 +119,9 @@ const Profile = () => {
       setSuccess('Profile updated successfully!');
       setError(null);
     } catch (error) {
+      if (error instanceof Error) {
       console.error('Error updating user data:', error.message);
-      setError('Error updating profile. Please try again.');
+      setError('Error updating profile. Please try again.');}
       setSuccess(null);
     } finally {
       setLoading(false);

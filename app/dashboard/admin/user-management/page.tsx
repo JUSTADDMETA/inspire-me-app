@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import UserManagement from "@/components/admin/UserManagement";
+//import UserManagement from "@/components/admin/UserManagement";
 
 
 const styles = {
@@ -25,7 +25,7 @@ export default async function ProtectedPage() {
   return (
     <div className={styles.container}>
       <div>
-        <UserManagement />
+        {/*<UserManagement />*/}
       </div>
     </div>
   );
