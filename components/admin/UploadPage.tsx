@@ -68,8 +68,8 @@ export default function UploadPage() {
       region: 'eu-central-1',
       endpoint: 'https://ddbyrpmrexntgqszrays.supabase.co/storage/v1/s3',
       credentials: {
-        accessKeyId: '00a9a23344167d67a5a5f3fd9b2c69a1',
-        secretAccessKey: '2b77d2e902a9584f44ebd984a2d1b30ae592d1462b76a13889e9c4a9e183e476',
+        accessKeyId: '43a884bdeab7b0e908b19e06015f1812',
+    secretAccessKey: '5451064c12683eaadb32e7060b618b7b8e6a812646fcfe16663ebaa1df208a2a',
       }
     });
 
